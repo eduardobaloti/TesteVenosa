@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Security.Cryptography.X509Certificates;
 using TMPro;
 using Unity.Properties;
 using UnityEngine;
@@ -10,11 +11,12 @@ public class ColorRequest : MonoBehaviour
 {
     Material material;
     public TextMeshProUGUI logText;
+    System.Random random = new System.Random();
 
     void Start()
     {
         material = GetComponent<MeshRenderer>().material;
-        InvokeRepeating("ChangeColor", 2f, 1f);
+        InvokeRepeating("ChangeColor", 1f, 1f);
     }
 
     void ChangeColor()
@@ -24,7 +26,9 @@ public class ColorRequest : MonoBehaviour
 
     IEnumerator GetColor()
     {
-        string query = "{\"query\":\"query {\\n  color(id:\\\"1\\\") {\\n    data {\\n      attributes {\\n        hex\\n      }\\n    }\\n  }\\n}\"}";
+        string id = random.Next(1, 7).ToString();
+        string query = $"{{\"query\":\"query {{\\n  color(id:\\\"{id}\\\") {{\\n    data {{\\n      attributes {{\\n        hex\\n      }}\\n    }}\\n  }}\\n}}\"}}";
+
         using (UnityWebRequest webRequest = UnityWebRequest.Put("http://localhost:1337/graphql", query))
         {
             webRequest.method = "POST";
