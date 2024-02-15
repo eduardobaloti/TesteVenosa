@@ -1,6 +1,8 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
+using Unity.Properties;
 using UnityEngine;
 using UnityEngine.Networking;
 
@@ -22,22 +24,27 @@ public class ColorRequest : MonoBehaviour
 
     IEnumerator GetColor()
     {
-        using (UnityWebRequest webRequest = UnityWebRequest.Get("https://x-colors.yurace.pro/api/random"))
+        string query = "{\"query\":\"query {\\n  color(id:\\\"1\\\") {\\n    data {\\n      attributes {\\n        hex\\n      }\\n    }\\n  }\\n}\"}";
+        using (UnityWebRequest webRequest = UnityWebRequest.Put("http://localhost:1337/graphql", query))
         {
+            webRequest.method = "POST";
+            webRequest.SetRequestHeader("Content-Type", "application/json");
+
             yield return webRequest.SendWebRequest();
             if (webRequest.result != UnityWebRequest.Result.Success)
             {
                 logText.text = "Error";
+                logText.color = Color.red;
             }
             else
             {
-                var json = webRequest.downloadHandler.text;
-                ColorReq cReq = JsonUtility.FromJson<ColorReq>(json);
-                Color color = HexToColor(cReq.hex);
-                logText.text = cReq.hex;
+                var ret = webRequest.downloadHandler.text;
+                int indiceDoHashtag = ret.IndexOf('#');
+                string hex = ret.Substring(indiceDoHashtag, Mathf.Min(7, ret.Length - indiceDoHashtag));
+                Color color = HexToColor(hex);
+                logText.text = hex;
                 material.color = color;
             }
-
         }
     }
 
@@ -51,12 +58,5 @@ public class ColorRequest : MonoBehaviour
         return new Color(r, g, b);
     }
 
-    public class ColorReq
-    {
-        public string hex;
-        public string rgb;
-        public string hsl;
-
-    }
 }
 
